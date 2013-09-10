@@ -33,6 +33,12 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import cjdnsadmin
+import requests
+from datetime import datetime, timedelta
+#import git
+from . import pretty
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('VersionCheck')
@@ -45,6 +51,48 @@ class VersionCheck(callbacks.Plugin):
     """Add the help for "@plugin help VersionCheck" here
     This should describe *how* to use this plugin."""
     threaded = True
+    def __init__(self, irc):
+        self.__parent = super(VersionCheck, self)
+        self.__parent.__init__(irc)
+        
+        github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits").json()
+        self.latest = {
+            "time": datetime.strptime(github[0]['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ"),
+            "sha": github[0]['sha']
+            }
+        self.versions = {}
+        for version in github:
+            self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
+    
+    def doJoin(self, irc, msg):
+        """Triggered when someone joins a channel"""
+        check(irc, msg)
+    
+    def check(self, irc, msg, args=None):
+        """Checks your version."""
+        cjdns = cjdnsadmin.connectWithAdminInfo()
+        ping = cjdns.RouterModule_pingNode(msg.host)
+        if "version" in ping:
+            version = ping['version']
+            if not version in self.versions:
+                github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits/%s" % version).json()
+                self.versions[version] = datetime.strptime(github['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
+            if self.versions[version] > self.latest['time']:
+                github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits").json()
+                self.latest = {
+                    "time": datetime.strptime(github[0]['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ"),
+                    "sha": github[0]['sha']
+                    }
+                for version in github:
+                    self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
+            committime = self.versions[version]
+            if datetime.now() - committime > timedelta(hours=1):
+                irc.reply("is running and old version of cjdns! Using a commit from %s" % pretty.date(committime))
+        elif "error" in ping:
+            irc.reply(ping['error'])
+        else:
+            irc.reply("Whoops, no version from the ping. Options are: %s" % ", ".join(ping.keys()))
+    check = wrap(check)
 
 
 Class = VersionCheck

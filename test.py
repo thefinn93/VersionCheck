@@ -29,6 +29,8 @@
 ###
 
 from supybot.test import *
+import cjdnsadmin
+import requests
 
 class VersionCheckTestCase(PluginTestCase):
     plugins = ('VersionCheck',)
