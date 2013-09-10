@@ -64,10 +64,6 @@ class VersionCheck(callbacks.Plugin):
         for version in github:
             self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
     
-    def doJoin(self, irc, msg):
-        """Triggered when someone joins a channel"""
-        check(irc, msg)
-    
     def check(self, irc, msg, args=None):
         """Checks your version."""
         cjdns = cjdnsadmin.connectWithAdminInfo()
@@ -86,12 +82,17 @@ class VersionCheck(callbacks.Plugin):
                 for version in github:
                     self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
             committime = self.versions[version]
-            if datetime.now() - committime > timedelta(hours=1):
-                irc.reply("is running and old version of cjdns! Using a commit from %s" % pretty.date(committime))
-        elif "error" in ping:
+            if version != self.latest['sha']:
+                if datetime.now() - committime > timedelta(hours=1):
+                    irc.reply("is running and old version of cjdns! Using a commit from %s" % pretty.date(committime))
+                    #irc.reply("is running %s (from %s), latest is %s (from %s)" % (version, pretty.date(committime), self.latest['sha'], pretty.date(self.latest['time'])))
+            elif args is not None:
+                irc.reply("is up to date")
+                irc.reply("is running %s (from %s)" % (version, pretty.date(committime)))
+        elif "error" in ping and args is not None:
             irc.reply(ping['error'])
-        else:
-            irc.reply("Whoops, no version from the ping. Options are: %s" % ", ".join(ping.keys()))
+    
+    doJoin = check
     check = wrap(check)
 
 
