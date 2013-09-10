@@ -48,8 +48,8 @@ except:
     _ = lambda x:x
 
 class VersionCheck(callbacks.Plugin):
-    """Add the help for "@plugin help VersionCheck" here
-    This should describe *how* to use this plugin."""
+    """Checks the cjdns version of everyone who joins.
+    Harasses them if they're out of date"""
     threaded = True
     def __init__(self, irc):
         self.__parent = super(VersionCheck, self)
@@ -83,9 +83,10 @@ class VersionCheck(callbacks.Plugin):
                     self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
             committime = self.versions[version]
             if version != self.latest['sha']:
-                if datetime.now() - committime > timedelta(hours=1):
-                    irc.reply("is running and old version of cjdns! Using a commit from %s" % pretty.date(committime))
-                    #irc.reply("is running %s (from %s), latest is %s (from %s)" % (version, pretty.date(committime), self.latest['sha'], pretty.date(self.latest['time'])))
+                if datetime.now() - committime > timedelta(weeks=1):
+                    irc.queueMsg(ircmsgs.privmsg(msg.channel, "%s is running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
+                elif datetime.now() - committime > timedelta(days=1):
+                    irc.queueMsg(ircmsgs.notice(msg.nick, "You're running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
             elif args is not None:
                 irc.reply("is up to date")
                 irc.reply("is running %s (from %s)" % (version, pretty.date(committime)))
