@@ -83,9 +83,9 @@ class VersionCheck(callbacks.Plugin):
                 for version in github:
                     self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
             committime = self.versions[version]
+            hostmask = "%s!%s@%s" % (msg.nick, msg.user, msg.host)
             if version != self.latest['sha']:
                 if datetime.now() - committime > timedelta(weeks=1):
-                    hostmask = "%s!%s@%s" % (msg.nick, msg.user, msg.host)
                     sendNotice = True
                     if hostmask not in self.recentnotices:
                         self.recentnotices[hostmask] = datetime.now()
