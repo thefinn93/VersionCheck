@@ -103,6 +103,7 @@ class VersionCheck(callbacks.Plugin):
                             sendNotice = False
                     if sendNotice:
                         irc.queueMsg(ircmsgs.notice(msg.nick, "You're running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
+                        self.log.info("%s is running a commit from %s" % (irc.nick, pretty.date(committime)))
             elif args is not None:
                 irc.reply("is up to date")
                 irc.reply("is running %s (from %s)" % (version, pretty.date(committime)))
