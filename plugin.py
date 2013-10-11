@@ -94,7 +94,7 @@ class VersionCheck(callbacks.Plugin):
                         if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
                             sendNotice = False
                     if sendNotice:
-                        self.log.info("%s is running a commit from %s" % (irc.nick, pretty.date(committime)))
+                        self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
                         irc.queueMsg(ircmsgs.privmsg(msg.channel, "%s is running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
                 elif datetime.now() - committime > timedelta(days=1):
                     sendNotice = True
@@ -104,8 +104,8 @@ class VersionCheck(callbacks.Plugin):
                         if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
                             sendNotice = False
                     if sendNotice:
+                        self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
                         irc.queueMsg(ircmsgs.notice(msg.nick, "You're running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
-                        self.log.info("%s is running a commit from %s" % (irc.nick, pretty.date(committime)))
             elif args is not None:
                 irc.reply("is up to date")
                 irc.reply("is running %s (from %s)" % (version, pretty.date(committime)))
