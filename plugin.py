@@ -86,7 +86,7 @@ class VersionCheck(callbacks.Plugin):
             committime = self.versions[version]
             hostmask = "%s!%s@%s" % (msg.nick, msg.user, msg.host)
             if version != self.latest['sha']:
-                if datetime.now() - committime > timedelta(weeks=1):
+                if datetime.now() - committime > timedelta(months=1):
                     sendNotice = True
                     if hostmask not in self.recentnotices:
                         self.recentnotices[hostmask] = datetime.now()
