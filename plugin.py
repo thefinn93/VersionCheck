@@ -97,7 +97,7 @@ class VersionCheck(callbacks.Plugin):
                 elif datetime.now() - committime > timedelta(days=1):
                     sendNotice = True
                     if hostmask not in self.recentnotices:
-                        self.recentnotices[hostmaks] = datetime.now()
+                        self.recentnotices[hostmask] = datetime.now()
                     else:
                         if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
                             sendNotice = False
