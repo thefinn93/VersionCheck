@@ -96,7 +96,7 @@ class VersionCheck(callbacks.Plugin):
                     if sendNotice:
                         self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
                         irc.queueMsg(ircmsgs.privmsg("#hyperboria", "%s is running and old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
-                elif datetime.now() - committime > timedelta(days=1):
+                elif datetime.now() - committime > timedelta(weeks=2):
                     sendNotice = True
                     if hostmask not in self.recentnotices:
                         self.recentnotices[hostmask] = datetime.now()
