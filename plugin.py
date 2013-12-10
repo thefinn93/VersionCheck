@@ -82,49 +82,55 @@ class VersionCheck(callbacks.Plugin):
         if host is not None:
             if nick is None:
                 nick = msg.nick
-            cjdns = cjdnsadmin.connectWithAdminInfo()
-            ping = cjdns.RouterModule_pingNode(host)
-            if "version" in ping:
-                version = ping['version']
-                if not version in self.versions:
-                    github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits/%s" % version).json()
-                    self.versions[version] = datetime.strptime(github['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
-                if self.versions[version] > self.latest['time']:
-                    github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits").json()
-                    self.latest = {
-                        "time": datetime.strptime(github[0]['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ"),
-                        "sha": github[0]['sha']
-                        }
-                    for version in github:
-                        self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
-                committime = self.versions[version]
-                hostmask = "%s!%s@%s" % (msg.nick, msg.user, msg.host)
-                if version != self.latest['sha']:
-                    if datetime.now() - committime > timedelta(weeks=4):
-                        sendNotice = True
-                        if hostmask not in self.recentnotices:
-                            self.recentnotices[hostmask] = datetime.now()
-                        else:
-                            if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
-                                sendNotice = False
-                        if sendNotice:
-                            self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
-                            irc.queueMsg(ircmsgs.privmsg(msg.args[0], "%s is running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
-                    elif datetime.now() - committime > timedelta(weeks=2):
-                        sendNotice = True
-                        if hostmask not in self.recentnotices:
-                            self.recentnotices[hostmask] = datetime.now()
-                        else:
-                            if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
-                                sendNotice = False
-                        if sendNotice:
-                            self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
-                            irc.queueMsg(ircmsgs.notice(msg.nick, "You're running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
-                elif args is not None:
-                    irc.reply("%s is up to date" % nick)
-                    irc.reply("%s is running %s (from %s)" % (nick, version, pretty.date(committime)))
-            elif "error" in ping and args is not None:
-                irc.reply("Error checking version of %s: %s" % (host, ping['error']))
+            hostmask = "%s!%s@%s" % (msg.nick, msg.user, msg.host)
+            sendNotice = True
+            if hostmask not in self.recentnotices:
+                self.recentnotices[hostmask] = datetime.now()
+            else:
+                if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
+                    sendNotice = False
+            if sendNotice or args is not None:
+                cjdns = cjdnsadmin.connectWithAdminInfo()
+                ping = cjdns.RouterModule_pingNode(host, self.registryValue('timeout'))
+                if "version" in ping:
+                    version = ping['version']
+                    if not version in self.versions:
+                        github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits/%s" % version).json()
+                        self.versions[version] = datetime.strptime(github['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ")
+                    if self.versions[version] > self.latest['time']:
+                        github = requests.get("https://api.github.com/repos/cjdelisle/cjdns/commits").json()
+                        self.latest = {
+                            "time": datetime.strptime(github[0]['commit']['author']['date'], "%Y-%m-%dT%H:%M:%SZ"),
+                            "sha": github[0]['sha']
+                            }
+                        for version in github:
+                            self.versions[version['sha']] = datetime.strptime(version['commit']['author']['date'])
+                    committime = self.versions[version]
+                    if version != self.latest['sha']:
+                        if datetime.now() - committime > timedelta(weeks=4):
+                            if hostmask not in self.recentnotices:
+                                self.recentnotices[hostmask] = datetime.now()
+                            else:
+                                if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
+                                    sendNotice = False
+                            if sendNotice:
+                                self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
+                                irc.queueMsg(ircmsgs.privmsg(msg.args[0], "%s is running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
+                        elif datetime.now() - committime > timedelta(weeks=2):
+                            sendNotice = True
+                            if hostmask not in self.recentnotices:
+                                self.recentnotices[hostmask] = datetime.now()
+                            else:
+                                if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
+                                    sendNotice = False
+                            if sendNotice:
+                                self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
+                                irc.queueMsg(ircmsgs.notice(msg.nick, "You're running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
+                    elif args is not None:
+                        irc.reply("%s is up to date" % nick)
+                        irc.reply("%s is running %s (from %s)" % (nick, version, pretty.date(committime)))
+                elif "error" in ping and args is not None:
+                    irc.reply("Error checking version of %s: %s" % (host, ping['error']))
     
     doJoin = versioncheck
     versioncheck = wrap(versioncheck, [additional('something')])

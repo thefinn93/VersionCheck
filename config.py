@@ -52,5 +52,7 @@ VersionCheck = conf.registerPlugin('VersionCheck')
 # conf.registerGlobalValue(VersionCheck, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
+conf.registerGlobalValue(VersionCheck, 'timeout',
+    registry.NonNegativeInteger(5000, """The number of milliseconds after which to timeout the ping if there is no response."""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
