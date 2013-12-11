@@ -108,24 +108,11 @@ class VersionCheck(callbacks.Plugin):
                     committime = self.versions[version]
                     if version != self.latest['sha']:
                         if datetime.now() - committime > timedelta(weeks=4):
-                            if hostmask not in self.recentnotices:
-                                self.recentnotices[hostmask] = datetime.now()
-                            else:
-                                if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
-                                    sendNotice = False
-                            if sendNotice:
-                                self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
-                                irc.queueMsg(ircmsgs.privmsg(msg.args[0], "%s is running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
+                            self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
+                            irc.queueMsg(ircmsgs.privmsg(msg.args[0], "%s is running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % (msg.nick, pretty.date(committime))))
                         elif datetime.now() - committime > timedelta(weeks=2):
-                            sendNotice = True
-                            if hostmask not in self.recentnotices:
-                                self.recentnotices[hostmask] = datetime.now()
-                            else:
-                                if datetime.now() - self.recentnotices[hostmask] < timedelta(hours=6):
-                                    sendNotice = False
-                            if sendNotice:
-                                self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
-                                irc.queueMsg(ircmsgs.notice(msg.nick, "You're running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
+                            self.log.info("%s is running a commit from %s" % (msg.nick, pretty.date(committime)))
+                            irc.queueMsg(ircmsgs.notice(msg.nick, "You're running an old version of cjdns! Using a commit from %s, by the looks of it. You really ought to update." % pretty.date(committime)))
                     elif args is not None:
                         irc.reply("%s is up to date" % nick)
                         irc.reply("%s is running %s (from %s)" % (nick, version, pretty.date(committime)))
